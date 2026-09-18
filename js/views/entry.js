@@ -3,6 +3,7 @@ import { navigate } from '../router.js';
 import { openModal, closeModal } from '../modal.js';
 import { uid, yen, parseYen, parseMonthKey, escapeHtml } from '../utils.js';
 import { findMissingDateRows, resolveRecurring } from '../logic.js';
+import { exportMonthToExcel } from '../export-excel.js';
 
 export async function renderEntryView(container) {
   const key = store.getCurrentMonth();
@@ -225,6 +226,7 @@ export async function renderEntryView(container) {
         <button class="primary" id="btn-create-slips">振替伝票作成</button>
         <button id="btn-add-row">＋ 行を追加</button>
         <button id="btn-recurring">定期入力</button>
+        <button id="btn-export-excel">Excelで保存</button>
         <button class="danger" id="btn-clear">データクリア</button>
       </div>
       <div class="totals-bar" id="totals-bar"></div>
@@ -256,5 +258,6 @@ export async function renderEntryView(container) {
   container.querySelector('#btn-create-slips').addEventListener('click', handleCreateSlips);
   container.querySelector('#btn-add-row').addEventListener('click', addRow);
   container.querySelector('#btn-recurring').addEventListener('click', openRecurringModal);
+  container.querySelector('#btn-export-excel').addEventListener('click', () => exportMonthToExcel(key));
   container.querySelector('#btn-clear').addEventListener('click', handleClear);
 }
