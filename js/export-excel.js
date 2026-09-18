@@ -102,7 +102,13 @@ export function exportMonthToExcel(key) {
     XLSX.utils.book_append_sheet(wb, buildSlipSheet(XLSX, slip), name);
   });
 
-  const expenseSummary = buildExpenseSummary(entries, accounts);
+  const purchaseExpenses = store.getPurchaseExpenses(key).map((p) => ({
+    date: p.date,
+    amount: p.amount,
+    debitAccount: p.account,
+    description: p.description,
+  }));
+  const expenseSummary = buildExpenseSummary([...entries, ...purchaseExpenses], accounts);
   XLSX.utils.book_append_sheet(wb, buildSummarySheet(XLSX, `${year}年${month}月　経費集計表`, expenseSummary), '経費集計');
 
   const salesSummary = buildSalesSummary(entries);

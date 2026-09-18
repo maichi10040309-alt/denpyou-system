@@ -6,8 +6,14 @@ export async function renderExpenseView(container) {
   const key = store.getCurrentMonth();
   const { year, month } = parseMonthKey(key);
   const entries = store.getEntries(key);
+  const purchaseExpenses = store.getPurchaseExpenses(key).map((p) => ({
+    date: p.date,
+    amount: p.amount,
+    debitAccount: p.account,
+    description: p.description,
+  }));
   const accounts = store.getAccounts();
-  const summary = buildExpenseSummary(entries, accounts);
+  const summary = buildExpenseSummary([...entries, ...purchaseExpenses], accounts);
 
   container.innerHTML = `
     <h1 class="page-title">${year}年${month}月　経費集計表</h1>

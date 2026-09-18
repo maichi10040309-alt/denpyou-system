@@ -73,4 +73,10 @@ export const DEPT_LABELS = {
   clinic: '治療院・エステ（㊵）',
 };
 
+export const DEPT_PREFIX_CHAR = {
+  kitchen: '⑩',
+  care: '⑳',
+  clinic: '㊵',
+};
+
 export const DEPT_ORDER = ['kitchen', 'care', 'clinic'];
