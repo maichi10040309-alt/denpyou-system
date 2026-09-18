@@ -114,7 +114,8 @@ export function buildExpenseSummary(entries, accounts) {
 }
 
 // 売上集計: 貸方科目が 売上/家賃収入/雑収入 のもの × 部署 で集計
-const SALES_ACCOUNTS = ['売上', '家賃収入', '雜収入', '雑収入'];
+// ※「雑収入」は科目マスタの表記ゆれ（雜収入）とは別物として扱う（元Excelマクロの挙動に合わせる）
+const SALES_ACCOUNTS = ['売上', '家賃収入', '雑収入'];
 
 export function buildSalesSummary(entries) {
   const totals = {};
