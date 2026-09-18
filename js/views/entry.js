@@ -3,6 +3,7 @@ import { navigate } from '../router.js';
 import { openModal, closeModal } from '../modal.js';
 import { uid, yen, parseYen, parseMonthKey, escapeHtml } from '../utils.js';
 import { findMissingDateRows, resolveRecurring } from '../logic.js';
+import { exportMonthToExcel } from '../export-excel.js';
 
 export async function renderEntryView(container) {
   const key = store.getCurrentMonth();
@@ -68,6 +69,10 @@ export async function renderEntryView(container) {
     updateTotalsBar();
   }
 
+  function isLastRow(tr) {
+    return tr === tr.parentElement.lastElementChild;
+  }
+
   function bindRowEvents() {
     container.querySelectorAll('#entry-tbody tr').forEach((tr) => {
       const id = tr.dataset.id;
@@ -123,6 +128,15 @@ export async function renderEntryView(container) {
         entry.taxFlag = kahiEl.value;
         persist();
       });
+
+      if (isLastRow(tr)) {
+        kahiEl.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Tab' && !ev.shiftKey) {
+            ev.preventDefault();
+            addRow();
+          }
+        });
+      }
 
       tr.querySelector('.f-del').addEventListener('click', () => {
         if (!confirm('この行を削除しますか？')) return;
@@ -221,10 +235,11 @@ export async function renderEntryView(container) {
   container.innerHTML = `
     <h1 class="page-title">伝票入力シート　${year}年${month}月</h1>
     <div class="panel">
-      <div class="toolbar no-print">
+      <div class="toolbar toolbar-sticky no-print">
         <button class="primary" id="btn-create-slips">振替伝票作成</button>
         <button id="btn-add-row">＋ 行を追加</button>
         <button id="btn-recurring">定期入力</button>
+        <button id="btn-export-excel">Excelで保存</button>
         <button class="danger" id="btn-clear">データクリア</button>
       </div>
       <div class="totals-bar" id="totals-bar"></div>
@@ -246,6 +261,11 @@ export async function renderEntryView(container) {
           <tbody id="entry-tbody"></tbody>
         </table>
       </div>
+      <div class="toolbar toolbar-bottom no-print">
+        <button id="btn-add-row-bottom">＋ 行を追加</button>
+        <button id="btn-recurring-bottom">定期入力</button>
+        <span class="hint" style="margin:0;">最終行で Tab キーを押しても新しい行が追加されます。</span>
+      </div>
       <datalist id="account-list">${accountOptions()}</datalist>
       <datalist id="desc-list">${descOptions()}</datalist>
     </div>
@@ -255,6 +275,9 @@ export async function renderEntryView(container) {
 
   container.querySelector('#btn-create-slips').addEventListener('click', handleCreateSlips);
   container.querySelector('#btn-add-row').addEventListener('click', addRow);
+  container.querySelector('#btn-add-row-bottom').addEventListener('click', addRow);
   container.querySelector('#btn-recurring').addEventListener('click', openRecurringModal);
+  container.querySelector('#btn-recurring-bottom').addEventListener('click', openRecurringModal);
+  container.querySelector('#btn-export-excel').addEventListener('click', () => exportMonthToExcel(key));
   container.querySelector('#btn-clear').addEventListener('click', handleClear);
 }

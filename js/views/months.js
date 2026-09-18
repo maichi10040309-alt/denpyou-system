@@ -2,6 +2,7 @@ import * as store from '../store.js';
 import { navigate } from '../router.js';
 import { openModal, closeModal } from '../modal.js';
 import { monthKey, parseMonthKey } from '../utils.js';
+import { exportMonthToExcel } from '../export-excel.js';
 
 function refreshChromeIfPossible() {
   import('../app.js').then((m) => m.refreshChrome && m.refreshChrome());
@@ -65,6 +66,7 @@ export async function renderMonthsView(container) {
               <span>${year}年${month}月　（${entryCount}件）${k === current ? '　★対象中' : ''}</span>
               <span>
                 <button class="small m-select">この月を開く</button>
+                <button class="small m-excel">Excelで保存</button>
                 <button class="small danger m-del">削除</button>
               </span>
             </li>`;
@@ -93,6 +95,13 @@ export async function renderMonthsView(container) {
       store.setCurrentMonth(key);
       refreshChromeIfPossible();
       navigate('/entry');
+    });
+  });
+
+  container.querySelectorAll('.m-excel').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const key = e.target.closest('li').dataset.key;
+      exportMonthToExcel(key);
     });
   });
 
