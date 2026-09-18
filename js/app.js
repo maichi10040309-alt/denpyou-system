@@ -51,6 +51,14 @@ export function refreshChrome() {
   buildMonthSelect();
 }
 
+function syncHeaderHeight() {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+  document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+}
+
+window.addEventListener('resize', syncHeaderHeight);
+
 const main = document.getElementById('app-main');
 
 function guardMonth(fn) {
@@ -78,4 +86,5 @@ route('/import', () => renderImportView(main));
 
 buildNav();
 buildMonthSelect();
+syncHeaderHeight();
 startRouter();
