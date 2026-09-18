@@ -312,6 +312,10 @@ tr.dept-clinic td { background: var(--dept-clinic-bg); }
   margin: 4px 0 12px;
 }
 
+tr.row-warn td {
+  background: #fff8e1;
+}
+
 .tag-asset {
   display: inline-block;
   font-size: 11px;

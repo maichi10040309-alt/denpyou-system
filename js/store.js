@@ -142,6 +142,27 @@ export function setEntries(key, entries) {
   setMonths(months);
 }
 
+// ---- 仕入れ経費（振替伝票を作らない経費専用データ） ----
+export function getPurchaseExpenses(key) {
+  const months = getMonths();
+  return (months[key] && months[key].purchaseExpenses) || [];
+}
+
+export function setPurchaseExpenses(key, list) {
+  const months = getMonths();
+  if (!months[key]) months[key] = { entries: [] };
+  months[key].purchaseExpenses = list;
+  setMonths(months);
+}
+
+export function addPurchaseExpenses(key, newItems) {
+  const months = getMonths();
+  if (!months[key]) months[key] = { entries: [] };
+  const existing = months[key].purchaseExpenses || [];
+  months[key].purchaseExpenses = [...existing, ...newItems];
+  setMonths(months);
+}
+
 export function addEmptyRow(key) {
   const entries = getEntries(key);
   entries.push(emptyEntryRow());

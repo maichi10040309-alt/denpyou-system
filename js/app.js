@@ -7,6 +7,7 @@ import { renderSalesView } from './views/sales.js';
 import { renderAccountsView, renderDescriptionsView, renderRecurringView } from './views/masters.js';
 import { renderMonthsView } from './views/months.js';
 import { renderImportView } from './views/import.js';
+import { renderPurchasesView } from './views/purchases.js';
 
 store.init();
 
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { path: '/summary', label: 'まとめ' },
   { path: '/expense', label: '経費集計' },
   { path: '/sales', label: '売上集計' },
+  { path: '/purchases', label: '仕入れ経費' },
   { path: '/masters/accounts', label: '科目マスタ' },
   { path: '/masters/descriptions', label: '摘要マスタ' },
   { path: '/masters/recurring', label: '定期支払マスタ' },
@@ -78,6 +80,7 @@ route('/slips', guardMonth(renderSlipsView));
 route('/summary', guardMonth(renderSummaryView));
 route('/expense', guardMonth(renderExpenseView));
 route('/sales', guardMonth(renderSalesView));
+route('/purchases', guardMonth(renderPurchasesView));
 route('/masters/accounts', () => renderAccountsView(main));
 route('/masters/descriptions', () => renderDescriptionsView(main));
 route('/masters/recurring', () => renderRecurringView(main));
