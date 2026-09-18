@@ -6,6 +6,7 @@ import { renderExpenseView } from './views/expense.js';
 import { renderSalesView } from './views/sales.js';
 import { renderAccountsView, renderDescriptionsView, renderRecurringView } from './views/masters.js';
 import { renderMonthsView } from './views/months.js';
+import { renderImportView } from './views/import.js';
 
 store.init();
 
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { path: '/masters/descriptions', label: '摘要マスタ' },
   { path: '/masters/recurring', label: '定期支払マスタ' },
   { path: '/months', label: '月管理' },
+  { path: '/import', label: 'Excel取込' },
 ];
 
 function buildNav() {
@@ -72,6 +74,7 @@ route('/masters/accounts', () => renderAccountsView(main));
 route('/masters/descriptions', () => renderDescriptionsView(main));
 route('/masters/recurring', () => renderRecurringView(main));
 route('/months', () => renderMonthsView(main));
+route('/import', () => renderImportView(main));
 
 buildNav();
 buildMonthSelect();
