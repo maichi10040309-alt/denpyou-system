@@ -44,7 +44,7 @@ export async function renderEntryView(container) {
   // ---- 絞り込み・並べ替え ----
   const filterState = { date: '', amount: '', account: '', desc: '' };
   const sortState = { field: null, dir: 'asc' };
-  const SORT_FIELDS = ['date', 'amount', 'debitAccount', 'description', 'creditAccount', 'amount2'];
+  const SORT_FIELDS = ['date'];
 
   function hasActiveFilter() {
     return Boolean(filterState.date || filterState.amount || filterState.account || filterState.desc);
@@ -343,11 +343,11 @@ export async function renderEntryView(container) {
             <tr>
               <th style="width:40px;">番号</th>
               <th style="width:130px;" class="sortable" data-field="date">日付<span class="sort-arrow" data-field="date"></span></th>
-              <th style="width:110px;" class="sortable" data-field="amount">金額<span class="sort-arrow" data-field="amount"></span></th>
-              <th style="width:120px;" class="sortable" data-field="debitAccount">借方科目<span class="sort-arrow" data-field="debitAccount"></span></th>
-              <th class="sortable" data-field="description">摘要<span class="sort-arrow" data-field="description"></span></th>
-              <th style="width:120px;" class="sortable" data-field="creditAccount">貸方科目<span class="sort-arrow" data-field="creditAccount"></span></th>
-              <th style="width:110px;" class="sortable" data-field="amount2">金額2<span class="sort-arrow" data-field="amount2"></span></th>
+              <th style="width:110px;">金額</th>
+              <th style="width:120px;">借方科目</th>
+              <th>摘要</th>
+              <th style="width:120px;">貸方科目</th>
+              <th style="width:110px;">金額2</th>
               <th style="width:60px;">課/非</th>
               <th style="width:40px;"></th>
             </tr>
