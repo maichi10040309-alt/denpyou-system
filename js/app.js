@@ -1,7 +1,7 @@
 import * as store from './store.js';
 import { route, startRouter, navigate, render as rerender } from './router.js';
 import { renderEntryView } from './views/entry.js';
-import { renderSlipsView, renderSummaryView } from './views/slips.js';
+import { renderSummaryView } from './views/slips.js';
 import { renderExpenseView } from './views/expense.js';
 import { renderSalesView } from './views/sales.js';
 import { renderAccountsView, renderDescriptionsView, renderRecurringView } from './views/masters.js';
@@ -13,7 +13,6 @@ store.init();
 
 const NAV_ITEMS = [
   { path: '/entry', label: '伝票入力' },
-  { path: '/slips', label: '振替伝票' },
   { path: '/summary', label: 'まとめ' },
   { path: '/expense', label: '経費集計' },
   { path: '/sales', label: '売上集計' },
@@ -76,7 +75,6 @@ function guardMonth(fn) {
 }
 
 route('/entry', guardMonth(renderEntryView));
-route('/slips', guardMonth(renderSlipsView));
 route('/summary', guardMonth(renderSummaryView));
 route('/expense', guardMonth(renderExpenseView));
 route('/sales', guardMonth(renderSalesView));

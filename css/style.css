@@ -178,6 +178,27 @@ td input:hover, td select:hover, td input:focus, td select:focus {
 .num { text-align: right; }
 .center { text-align: center; }
 
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+th.sortable:hover { background: #e2e9f4; }
+.sort-arrow {
+  display: inline-block;
+  width: 12px;
+  font-size: 10px;
+  color: var(--color-accent);
+}
+
+.filter-toolbar input {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font: inherit;
+  width: 160px;
+}
+
 .totals-bar {
   display: flex;
   gap: 24px;
