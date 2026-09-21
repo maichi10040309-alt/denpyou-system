@@ -1,7 +1,7 @@
 import * as store from '../store.js';
 import { navigate } from '../router.js';
 import { openModal, closeModal } from '../modal.js';
-import { uid, yen, parseYen, parseMonthKey, escapeHtml } from '../utils.js';
+import { uid, yen, parseYen, parseMonthKey, escapeHtml, formatDateShort } from '../utils.js';
 import { findMissingDateRows, resolveRecurring } from '../logic.js';
 import { exportMonthToExcel } from '../export-excel.js';
 
@@ -41,10 +41,81 @@ export async function renderEntryView(container) {
     return descriptions.map((d) => `<option value="${escapeHtml(d.text)}"></option>`).join('');
   }
 
-  function rowHtml(e, idx) {
+  // ---- 絞り込み・並べ替え ----
+  const filterState = { date: '', amount: '', account: '', desc: '' };
+  const sortState = { field: null, dir: 'asc' };
+  const SORT_FIELDS = ['date', 'amount', 'debitAccount', 'description', 'creditAccount', 'amount2'];
+
+  function hasActiveFilter() {
+    return Boolean(filterState.date || filterState.amount || filterState.account || filterState.desc);
+  }
+
+  function resetFilterAndSort() {
+    filterState.date = '';
+    filterState.amount = '';
+    filterState.account = '';
+    filterState.desc = '';
+    sortState.field = null;
+    sortState.dir = 'asc';
+    ['f-date', 'f-amount', 'f-account', 'f-desc'].forEach((id) => {
+      const el = container.querySelector(`#${id}`);
+      if (el) el.value = '';
+    });
+  }
+
+  function matchesFilter(e) {
+    if (filterState.date) {
+      const shortDate = e.date ? formatDateShort(e.date) : '';
+      if (!(e.date || '').includes(filterState.date) && !shortDate.includes(filterState.date)) return false;
+    }
+    if (filterState.amount) {
+      const a1 = e.amount ? String(e.amount) : '';
+      const a2 = e.amount2 ? String(e.amount2) : '';
+      if (!a1.includes(filterState.amount) && !a2.includes(filterState.amount)) return false;
+    }
+    if (filterState.account) {
+      const hay = `${e.debitAccount || ''} ${e.creditAccount || ''}`;
+      if (!hay.includes(filterState.account)) return false;
+    }
+    if (filterState.desc) {
+      if (!(e.description || '').includes(filterState.desc)) return false;
+    }
+    return true;
+  }
+
+  function compareEntries(a, b) {
+    const f = sortState.field;
+    let va = a[f];
+    let vb = b[f];
+    if (f === 'amount' || f === 'amount2') {
+      va = Number(va) || 0;
+      vb = Number(vb) || 0;
+    } else {
+      va = String(va || '');
+      vb = String(vb || '');
+    }
+    const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+    return sortState.dir === 'desc' ? -cmp : cmp;
+  }
+
+  function getVisibleEntries() {
+    const filtered = entries.filter(matchesFilter);
+    if (!sortState.field) return filtered;
+    return [...filtered].sort(compareEntries);
+  }
+
+  function updateSortIndicators() {
+    SORT_FIELDS.forEach((f) => {
+      const arrow = container.querySelector(`.sort-arrow[data-field="${f}"]`);
+      if (!arrow) return;
+      arrow.textContent = sortState.field === f ? (sortState.dir === 'asc' ? '▲' : '▼') : '';
+    });
+  }
+
+  function rowHtml(e, num) {
     return `
     <tr data-id="${e.id}">
-      <td class="center">${idx + 1}</td>
+      <td class="center">${num}</td>
       <td><input type="date" class="f-date" value="${e.date || ''}"></td>
       <td><input type="text" inputmode="numeric" class="f-amount num" value="${e.amount ? yen(e.amount) : ''}" placeholder="0"></td>
       <td><input type="text" list="account-list" class="f-debit" value="${escapeHtml(e.debitAccount)}"></td>
@@ -64,9 +135,21 @@ export async function renderEntryView(container) {
 
   function renderTable() {
     const tbody = container.querySelector('#entry-tbody');
-    tbody.innerHTML = entries.map(rowHtml).join('') || '';
+    const originalIndex = new Map(entries.map((e, i) => [e.id, i + 1]));
+    const visible = getVisibleEntries();
+    tbody.innerHTML = visible.map((e) => rowHtml(e, originalIndex.get(e.id))).join('') || '';
     bindRowEvents();
     updateTotalsBar();
+    updateSortIndicators();
+
+    const info = container.querySelector('#filter-info');
+    if (info) {
+      info.textContent = hasActiveFilter() || sortState.field
+        ? `${visible.length}件を表示中（全${entries.length}件）`
+        : '';
+    }
+    const emptyEl = container.querySelector('#filter-empty');
+    if (emptyEl) emptyEl.style.display = visible.length === 0 && entries.length > 0 ? '' : 'none';
   }
 
   function isLastRow(tr) {
@@ -148,6 +231,7 @@ export async function renderEntryView(container) {
   }
 
   function addRow() {
+    resetFilterAndSort();
     entries.push(store.newEmptyEntry());
     persist();
     renderTable();
@@ -166,13 +250,14 @@ export async function renderEntryView(container) {
       alert('日付が入っていない行があります。\n該当行に日付を入力してください。');
       return;
     }
-    navigate('/slips');
+    navigate('/summary');
   }
 
   function handleClear() {
     if (!confirm('入力中のデータをすべて削除します。よろしいですか？')) return;
     entries = [];
     persist();
+    resetFilterAndSort();
     renderTable();
   }
 
@@ -227,6 +312,7 @@ export async function renderEntryView(container) {
       });
       persist();
       closeModal();
+      resetFilterAndSort();
       renderTable();
       alert(`${count}件を入力しました。\n日付（日付欄）が空欄になっています。各行の日付を入力してください。`);
     };
@@ -243,23 +329,32 @@ export async function renderEntryView(container) {
         <button class="danger" id="btn-clear">データクリア</button>
       </div>
       <div class="totals-bar" id="totals-bar"></div>
+      <div class="toolbar filter-toolbar no-print">
+        <input type="text" id="f-date" placeholder="日付で絞り込み（例: 8/10）">
+        <input type="text" id="f-amount" placeholder="金額で絞り込み">
+        <input type="text" id="f-account" placeholder="科目で絞り込み">
+        <input type="text" id="f-desc" placeholder="摘要で絞り込み">
+        <button class="small" id="btn-clear-filter">絞り込みを解除</button>
+        <span class="hint" id="filter-info" style="margin:0;"></span>
+      </div>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th style="width:40px;">番号</th>
-              <th style="width:130px;">日付</th>
-              <th style="width:110px;">金額</th>
-              <th style="width:120px;">借方科目</th>
-              <th>摘要</th>
-              <th style="width:120px;">貸方科目</th>
-              <th style="width:110px;">金額2</th>
+              <th style="width:130px;" class="sortable" data-field="date">日付<span class="sort-arrow" data-field="date"></span></th>
+              <th style="width:110px;" class="sortable" data-field="amount">金額<span class="sort-arrow" data-field="amount"></span></th>
+              <th style="width:120px;" class="sortable" data-field="debitAccount">借方科目<span class="sort-arrow" data-field="debitAccount"></span></th>
+              <th class="sortable" data-field="description">摘要<span class="sort-arrow" data-field="description"></span></th>
+              <th style="width:120px;" class="sortable" data-field="creditAccount">貸方科目<span class="sort-arrow" data-field="creditAccount"></span></th>
+              <th style="width:110px;" class="sortable" data-field="amount2">金額2<span class="sort-arrow" data-field="amount2"></span></th>
               <th style="width:60px;">課/非</th>
               <th style="width:40px;"></th>
             </tr>
           </thead>
           <tbody id="entry-tbody"></tbody>
         </table>
+        <div id="filter-empty" class="empty-state" style="display:none;">条件に一致する行がありません。</div>
       </div>
       <div class="toolbar toolbar-bottom no-print">
         <button id="btn-add-row-bottom">＋ 行を追加</button>
@@ -280,4 +375,38 @@ export async function renderEntryView(container) {
   container.querySelector('#btn-recurring-bottom').addEventListener('click', openRecurringModal);
   container.querySelector('#btn-export-excel').addEventListener('click', () => exportMonthToExcel(key));
   container.querySelector('#btn-clear').addEventListener('click', handleClear);
+
+  container.querySelector('#f-date').addEventListener('input', (e) => {
+    filterState.date = e.target.value;
+    renderTable();
+  });
+  container.querySelector('#f-amount').addEventListener('input', (e) => {
+    filterState.amount = e.target.value;
+    renderTable();
+  });
+  container.querySelector('#f-account').addEventListener('input', (e) => {
+    filterState.account = e.target.value;
+    renderTable();
+  });
+  container.querySelector('#f-desc').addEventListener('input', (e) => {
+    filterState.desc = e.target.value;
+    renderTable();
+  });
+  container.querySelector('#btn-clear-filter').addEventListener('click', () => {
+    resetFilterAndSort();
+    renderTable();
+  });
+
+  container.querySelectorAll('th.sortable').forEach((th) => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.field;
+      if (sortState.field === field) {
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.field = field;
+        sortState.dir = 'asc';
+      }
+      renderTable();
+    });
+  });
 }

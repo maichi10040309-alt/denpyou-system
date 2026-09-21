@@ -52,25 +52,6 @@ function slipHtml(slip) {
   `;
 }
 
-export async function renderSlipsView(container) {
-  const key = store.getCurrentMonth();
-  const { year, month } = parseMonthKey(key);
-  const entries = store.getEntries(key);
-  const slips = buildSlips(entries);
-
-  container.innerHTML = `
-    <h1 class="page-title no-print">振替伝票　${year}年${month}月（全${slips.length}件）</h1>
-    <div class="toolbar no-print">
-      <button class="primary" id="btn-print">印刷する</button>
-      <span class="hint" style="margin:0;">日付ごとに1枚の伝票としてまとめています。伝票入力シートの内容を編集すると自動的に反映されます。</span>
-    </div>
-    ${slips.length === 0 ? '<div class="empty-state">対象データがありません。伝票入力シートでデータを入力してください。</div>' : slips.map(slipHtml).join('')}
-  `;
-
-  const btn = container.querySelector('#btn-print');
-  if (btn) btn.addEventListener('click', () => window.print());
-}
-
 export async function renderSummaryView(container) {
   const key = store.getCurrentMonth();
   const { year, month } = parseMonthKey(key);
@@ -78,11 +59,12 @@ export async function renderSummaryView(container) {
   const slips = buildSlips(entries);
 
   container.innerHTML = `
-    <h1 class="page-title no-print">振替伝票まとめ　${year}年${month}月</h1>
+    <h1 class="page-title no-print">振替伝票まとめ　${year}年${month}月（全${slips.length}件）</h1>
     <div class="toolbar no-print">
       <button class="primary" id="btn-print">印刷する</button>
+      <span class="hint" style="margin:0;">日付ごとに1枚の伝票としてまとめています。伝票入力シートの内容を編集すると自動的に反映されます。</span>
     </div>
-    ${slips.length === 0 ? '<div class="empty-state">対象データがありません。</div>' : slips.map(slipHtml).join('')}
+    ${slips.length === 0 ? '<div class="empty-state">対象データがありません。伝票入力シートでデータを入力してください。</div>' : slips.map(slipHtml).join('')}
   `;
 
   const btn = container.querySelector('#btn-print');
