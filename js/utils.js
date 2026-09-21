@@ -56,6 +56,38 @@ export function daysInMonth(year, month) {
   return new Date(year, month, 0).getDate();
 }
 
+function toISODate(y, m, d) {
+  if (!y || !m || !d) return null;
+  if (m < 1 || m > 12) return null;
+  if (d < 1 || d > daysInMonth(y, m)) return null;
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+// 「2026-08-10」「2026/8/10」「8/10」「8月10日」「10」のような自由な入力を
+// ISO形式（YYYY-MM-DD）に変換する。年・日が省略された場合は対象月を補う。
+// 解析できない場合は null、空欄の場合は '' を返す。
+export function parseFlexibleDate(input, defaultYear, defaultMonth) {
+  if (input === null || input === undefined) return '';
+  const s = String(input).trim().normalize('NFKC');
+  if (!s) return '';
+
+  let m = s.match(/^(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})日?$/);
+  if (m) return toISODate(Number(m[1]), Number(m[2]), Number(m[3]));
+
+  m = s.match(/^(\d{1,2})[-/月](\d{1,2})日?$/);
+  if (m) return toISODate(defaultYear, Number(m[1]), Number(m[2]));
+
+  m = s.match(/^(\d{1,2})日?$/);
+  if (m) return toISODate(defaultYear, defaultMonth, Number(m[1]));
+
+  return null;
+}
+
+// 全角/半角（カナ・数字など）の表記ゆれを吸収して比較できるようにする
+export function normalizeSearch(str) {
+  return (str || '').normalize('NFKC');
+}
+
 // 摘要の先頭文字から部署を判定する
 // ⑩ = 厨房 / ⑳ = 介護 / ㊵ = 治療院・エステ
 export function classifyDept(description) {

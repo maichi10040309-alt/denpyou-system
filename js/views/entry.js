@@ -1,7 +1,7 @@
 import * as store from '../store.js';
 import { navigate } from '../router.js';
 import { openModal, closeModal } from '../modal.js';
-import { uid, yen, parseYen, parseMonthKey, escapeHtml, formatDateShort } from '../utils.js';
+import { uid, yen, parseYen, parseMonthKey, escapeHtml, formatDateShort, parseFlexibleDate, normalizeSearch } from '../utils.js';
 import { findMissingDateRows, resolveRecurring } from '../logic.js';
 import { exportMonthToExcel } from '../export-excel.js';
 
@@ -65,20 +65,22 @@ export async function renderEntryView(container) {
 
   function matchesFilter(e) {
     if (filterState.date) {
+      const q = normalizeSearch(filterState.date);
       const shortDate = e.date ? formatDateShort(e.date) : '';
-      if (!(e.date || '').includes(filterState.date) && !shortDate.includes(filterState.date)) return false;
+      if (!normalizeSearch(e.date || '').includes(q) && !normalizeSearch(shortDate).includes(q)) return false;
     }
     if (filterState.amount) {
+      const q = normalizeSearch(filterState.amount);
       const a1 = e.amount ? String(e.amount) : '';
       const a2 = e.amount2 ? String(e.amount2) : '';
-      if (!a1.includes(filterState.amount) && !a2.includes(filterState.amount)) return false;
+      if (!normalizeSearch(a1).includes(q) && !normalizeSearch(a2).includes(q)) return false;
     }
     if (filterState.account) {
-      const hay = `${e.debitAccount || ''} ${e.creditAccount || ''}`;
-      if (!hay.includes(filterState.account)) return false;
+      const hay = normalizeSearch(`${e.debitAccount || ''} ${e.creditAccount || ''}`);
+      if (!hay.includes(normalizeSearch(filterState.account))) return false;
     }
     if (filterState.desc) {
-      if (!(e.description || '').includes(filterState.desc)) return false;
+      if (!normalizeSearch(e.description || '').includes(normalizeSearch(filterState.desc))) return false;
     }
     return true;
   }
@@ -116,7 +118,12 @@ export async function renderEntryView(container) {
     return `
     <tr data-id="${e.id}">
       <td class="center">${num}</td>
-      <td><input type="date" class="f-date" value="${e.date || ''}"></td>
+      <td>
+        <div class="date-input-group">
+          <input type="text" class="f-date-text" value="${escapeHtml(e.date || '')}" placeholder="例 8/10">
+          <input type="date" class="f-date-native" value="${e.date || ''}" title="カレンダーから選択">
+        </div>
+      </td>
       <td><input type="text" inputmode="numeric" class="f-amount num" value="${e.amount ? yen(e.amount) : ''}" placeholder="0"></td>
       <td><input type="text" list="account-list" class="f-debit" value="${escapeHtml(e.debitAccount)}"></td>
       <td><input type="text" list="desc-list" class="f-desc" value="${escapeHtml(e.description)}"></td>
@@ -162,9 +169,25 @@ export async function renderEntryView(container) {
       const entry = entries.find((e) => e.id === id);
       if (!entry) return;
 
-      const dateEl = tr.querySelector('.f-date');
-      dateEl.addEventListener('change', () => {
-        entry.date = dateEl.value;
+      const dateTextEl = tr.querySelector('.f-date-text');
+      const dateNativeEl = tr.querySelector('.f-date-native');
+
+      dateTextEl.addEventListener('change', () => {
+        const parsed = parseFlexibleDate(dateTextEl.value, year, month);
+        if (parsed === null) {
+          alert('日付の形式が正しくありません。\n例: 2026-08-10 / 8/10 / 10（日のみ）');
+          dateTextEl.value = entry.date || '';
+          return;
+        }
+        entry.date = parsed;
+        dateTextEl.value = parsed;
+        dateNativeEl.value = parsed;
+        persist();
+      });
+
+      dateNativeEl.addEventListener('change', () => {
+        entry.date = dateNativeEl.value;
+        dateTextEl.value = dateNativeEl.value;
         persist();
       });
 
@@ -237,7 +260,7 @@ export async function renderEntryView(container) {
     renderTable();
     const rows = container.querySelectorAll('#entry-tbody tr');
     const last = rows[rows.length - 1];
-    if (last) last.querySelector('.f-date').focus();
+    if (last) last.querySelector('.f-date-text').focus();
   }
 
   function handleCreateSlips() {

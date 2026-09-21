@@ -191,6 +191,32 @@ th.sortable:hover { background: #e2e9f4; }
   color: var(--color-accent);
 }
 
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.date-input-group .f-date-text {
+  flex: 1;
+  min-width: 0;
+}
+.date-input-group .f-date-native {
+  flex: none;
+  width: 22px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.date-input-group .f-date-native:hover { opacity: 1; }
+.date-input-group .f-date-native::-webkit-datetime-edit,
+.date-input-group .f-date-native::-webkit-datetime-edit-fields-wrapper {
+  opacity: 0;
+}
+.date-input-group .f-date-native::-webkit-inner-spin-button { display: none; }
+
 .filter-toolbar input {
   padding: 7px 10px;
   border: 1px solid var(--color-border);
