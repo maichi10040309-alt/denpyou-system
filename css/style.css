@@ -277,6 +277,14 @@ tr.dept-kitchen td { background: var(--dept-kitchen-bg); }
 tr.dept-care td { background: var(--dept-care-bg); }
 tr.dept-clinic td { background: var(--dept-clinic-bg); }
 
+tr.labor-row td {
+  background: #f4f0ff;
+  border-top: 2px solid var(--color-border);
+}
+tr.labor-row input {
+  font-weight: bold;
+}
+
 .empty-state {
   padding: 40px;
   text-align: center;

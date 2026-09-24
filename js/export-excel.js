@@ -1,6 +1,6 @@
 // 月データをExcelブック（.xlsx）として書き出す
 import { parseMonthKey, formatDateJP } from './utils.js';
-import { buildSlips, buildExpenseSummary, buildSalesSummary, DEPT_LABELS } from './logic.js';
+import { buildSlips, buildExpenseSummary, buildSalesSummary, combineExpenseWithLabor, DEPT_LABELS } from './logic.js';
 import * as store from './store.js';
 
 function buildInputSheet(XLSX, year, month, entries) {
@@ -108,7 +108,8 @@ export function exportMonthToExcel(key) {
     debitAccount: p.account,
     description: p.description,
   }));
-  const expenseSummary = buildExpenseSummary([...entries, ...purchaseExpenses], accounts);
+  const laborCosts = store.getLaborCosts(key);
+  const expenseSummary = combineExpenseWithLabor(buildExpenseSummary([...entries, ...purchaseExpenses], accounts), laborCosts);
   XLSX.utils.book_append_sheet(wb, buildSummarySheet(XLSX, `${year}年${month}月　経費集計表`, expenseSummary), '経費集計');
 
   const salesSummary = buildSalesSummary(entries);
