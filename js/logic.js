@@ -113,6 +113,31 @@ export function buildExpenseSummary(entries, accounts) {
   return { rows, totalByDept, grandTotal, details };
 }
 
+// 経費集計に、部署ごとに手入力した人件費を合算する
+// （人件費は伝票入力とは別に、部署ごとの金額を直接入力する運用のため）
+export function combineExpenseWithLabor(summary, laborCosts) {
+  const l = {
+    kitchen: Number(laborCosts && laborCosts.kitchen) || 0,
+    care: Number(laborCosts && laborCosts.care) || 0,
+    clinic: Number(laborCosts && laborCosts.clinic) || 0,
+  };
+  const laborTotal = l.kitchen + l.care + l.clinic;
+
+  const rows = [...summary.rows];
+  if (laborTotal > 0) {
+    rows.push({ account: '人件費', kitchen: l.kitchen, care: l.care, clinic: l.clinic, total: laborTotal, isLabor: true });
+  }
+
+  const totalByDept = {
+    kitchen: summary.totalByDept.kitchen + l.kitchen,
+    care: summary.totalByDept.care + l.care,
+    clinic: summary.totalByDept.clinic + l.clinic,
+  };
+  const grandTotal = summary.grandTotal + laborTotal;
+
+  return { ...summary, rows, totalByDept, grandTotal, laborCosts: l };
+}
+
 // 売上集計: 貸方科目が 売上/家賃収入/雑収入 のもの × 部署 で集計
 // ※「雑収入」は科目マスタの表記ゆれ（雜収入）とは別物として扱う（元Excelマクロの挙動に合わせる）
 const SALES_ACCOUNTS = ['売上', '家賃収入', '雑収入'];

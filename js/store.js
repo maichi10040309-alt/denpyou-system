@@ -163,6 +163,20 @@ export function addPurchaseExpenses(key, newItems) {
   setMonths(months);
 }
 
+// ---- 人件費（部署ごとの手入力額） ----
+export function getLaborCosts(key) {
+  const months = getMonths();
+  const l = (months[key] && months[key].laborCosts) || {};
+  return { kitchen: Number(l.kitchen) || 0, care: Number(l.care) || 0, clinic: Number(l.clinic) || 0 };
+}
+
+export function setLaborCosts(key, laborCosts) {
+  const months = getMonths();
+  if (!months[key]) months[key] = { entries: [] };
+  months[key].laborCosts = laborCosts;
+  setMonths(months);
+}
+
 export function addEmptyRow(key) {
   const entries = getEntries(key);
   entries.push(emptyEntryRow());
