@@ -56,6 +56,8 @@ export async function renderPurchasesView(container) {
     bindListEvents();
     const totalEl = container.querySelector('#purchase-total');
     if (totalEl) totalEl.textContent = `¥${yen(purchaseList.reduce((s, p) => s + (Number(p.amount) || 0), 0))}`;
+    const emptyEl = container.querySelector('#purchase-empty');
+    if (emptyEl) emptyEl.style.display = purchaseList.length === 0 ? '' : 'none';
   }
 
   function bindListEvents() {
@@ -289,6 +291,7 @@ export async function renderPurchasesView(container) {
       <h2 style="margin-top:0;">${year}年${month}月の仕入れ経費一覧</h2>
       <div class="toolbar">
         <button id="btn-add-purchase-row">＋ 行を追加</button>
+        <button class="danger" id="btn-clear-purchases">この月のデータをすべて削除</button>
         <span class="hint" style="margin:0;">合計額 <b id="purchase-total"></b></span>
       </div>
       <table>
@@ -304,12 +307,20 @@ export async function renderPurchasesView(container) {
         </thead>
         <tbody id="purchase-tbody"></tbody>
       </table>
-      ${purchaseList.length === 0 ? '<div class="empty-state">まだデータがありません。</div>' : ''}
+      <div id="purchase-empty" class="empty-state" style="display:none;">まだデータがありません。</div>
     </div>
   `;
 
   renderList();
   renderImportSection();
+
+  container.querySelector('#btn-clear-purchases').addEventListener('click', () => {
+    if (purchaseList.length === 0) return;
+    if (!confirm(`${year}年${month}月の仕入れ経費データ（${purchaseList.length}件）をすべて削除します。よろしいですか？`)) return;
+    purchaseList = [];
+    persistList();
+    renderList();
+  });
 
   container.querySelector('#btn-add-purchase-row').addEventListener('click', () => {
     purchaseList.push({
